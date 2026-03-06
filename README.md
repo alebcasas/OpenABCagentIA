@@ -1,13 +1,14 @@
 # OpenABCagentIA
 
-Agente de IA personal que corre en local y usa Telegram como interfaz. Usa Groq (Llama 3.3 70B) como LLM principal y OpenRouter como fallback opcional. Memoria persistente con SQLite.
+Agente de IA personal que corre en local y usa Telegram como interfaz. Usa **Groq** (Llama 3.3 70B) como LLM principal, con fallbacks opcionales en **OpenRouter** y **OpenAI/ChatGPT**. Memoria persistente con SQLite.
 
 ## Requisitos
 
 - Node.js 18+
 - Cuenta de Telegram y token de bot
-- API key de [Groq](https://console.groq.com/)
-- (Opcional) API key de [OpenRouter](https://openrouter.ai/) para fallback
+- API key de [Groq](https://console.groq.com/) (recomendado para mejor rendimiento y velocidad)
+- (Opcional) API key de [OpenRouter](https://openrouter.ai/) — como fallback cuando Groq tiene límites de tasa
+- (Opcional) API key de [OpenAI](https://platform.openai.com/) — para usar ChatGPT/GPT-4 como fallback adicional
 
 ## Instalación
 
@@ -23,10 +24,12 @@ cp .env.example .env
 
 Edita `.env` con tus valores:
 
-- `TELEGRAM_BOT_TOKEN`: Token del bot (BotFather).
-- `TELEGRAM_ALLOWED_USER_IDS`: Tu user ID de Telegram (o varios separados por comas).
-- `GROQ_API_KEY`: Tu API key de Groq.
-- `OPENROUTER_API_KEY` y `OPENROUTER_MODEL`: Opcionales; si están configurados, se usan cuando Groq devuelve 429.
+- `TELEGRAM_BOT_TOKEN`: Token del bot de Telegram (obtén uno en [@BotFather](https://t.me/botfather)).
+- `TELEGRAM_ALLOWED_USER_IDS`: Tu ID de usuario de Telegram (o varios separados por comas).
+- `GROQ_API_KEY`: Tu clave API de Groq (https://console.groq.com/keys).
+- `OPENROUTER_API_KEY` y `OPENROUTER_MODEL`: Opcionales. Si están configurados y tienes límite de tasa en Groq, se usarán como fallback.
+- `OPENAI_API_KEY`: Opcional. Tu clave API de OpenAI para usar ChatGPT/GPT-4 como fallback adicional (obtén una en https://platform.openai.com/api-keys).
+- `OPENAI_MODEL`: Opcional. Modelo a usar (por defecto `gpt-4`, también puedes usar `gpt-3.5-turbo` para menor costo).
 
 ## Uso
 
@@ -50,7 +53,10 @@ El bot usa **long polling** (no necesita servidor web ni URL pública). Solo usu
 - `src/config/` — Variables de entorno y validación (Zod).
 - `src/bot/` — Bot de Telegram (Grammy), whitelist, long polling.
 - `src/agent/` — Bucle del agente y tipos.
-- `src/llm/` — Groq (principal) y OpenRouter (fallback).
+- `src/llm/` — Integraciones de LLM:
+  - **Groq** (principal) — Más rápido y económico, usa Llama 3.3 70B.
+  - **OpenRouter** (fallback) — Alternativa a Groq cuando hay límites de tasa.
+  - **OpenAI** (fallback) — ChatGPT/GPT-4 para máxima calidad cuando sea necesario.
 - `src/memory/` — Memoria persistente con SQLite (better-sqlite3).
 - `src/tools/` — Herramientas (p. ej. `get_current_time`).
 
