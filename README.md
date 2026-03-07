@@ -1,6 +1,6 @@
 # OpenABCagentIA
 
-Agente de IA personal que corre en local y usa Telegram como interfaz. Usa **Groq** (Llama 3.3 70B) como LLM principal, con fallbacks opcionales en **OpenRouter** y **OpenAI/ChatGPT**. Memoria persistente con SQLite.
+Agente de IA personal que corre en local y usa Telegram como interfaz. Usa **Groq** (Llama 3.3 70B) como LLM principal, con fallbacks opcionales en **OpenRouter** y **OpenAI/ChatGPT**. Memoria persistente con SQLite y registro de conversaciones en archivo con límite de 10GB.
 
 ## Requisitos
 
@@ -50,6 +50,7 @@ Ejemplos:
 | `/news <texto>` | Busca noticias recientes | `/news inteligencia artificial 2024` |
 | `/wiki <texto>` | Busca en Wikipedia | `/wiki Albert Einstein` |
 | `/hora` | Muestra la hora actual | `/hora` |
+| `/stats` | Muestra estadísticas del archivo de chat | `/stats` |
 | `/ayuda` | Muestra todos los comandos | `/ayuda` |
 
 Modo producción:
@@ -70,7 +71,9 @@ El bot usa **long polling** (no necesita servidor web ni URL pública). Solo usu
   - **Groq** (principal) — Más rápido y económico, usa Llama 3.3 70B.
   - **OpenRouter** (fallback) — Alternativa a Groq cuando hay límites de tasa.
   - **OpenAI** (fallback) — ChatGPT/GPT-4 para máxima calidad cuando sea necesario.
-- `src/memory/` — Memoria persistente con SQLite (better-sqlite3).
+- `src/memory/` — Memoria persistente con SQLite (better-sqlite3) y registro de conversaciones en archivo.
+  - **chatLogger.ts** — Sistema de registro de chats con límite de 10GB y auto-limpieza.
+  - **stats.ts** — Funciones para mostrar estadísticas del archivo de chat.
 - `src/tools/` — Herramientas (p. ej. `get_current_time`).
 
 ## Herramientas
@@ -84,12 +87,41 @@ El agente puede usar herramientas para obtener información actualizada. Disponi
 
 Para añadir más, crea un módulo en `src/tools/` y regístralo en `src/tools/index.ts`.
 
+## Sistema de Registro de Chats
+
+El bot incluye un sistema avanzado de registro de conversaciones:
+
+### 📁 **Registro Automático**
+- **Archivo de chat**: `chat_log.txt` en la raíz del proyecto
+- **Formato estructurado**: Timestamp, ID de usuario, rol y contenido
+- **Registro en tiempo real**: Cada mensaje del usuario y respuesta del bot se guarda automáticamente
+
+### 🎯 **Límite y Auto-limpieza**
+- **Tamaño máximo**: 10GB (10,737,418,240 bytes)
+- **Auto-limpieza**: El archivo se vacía automáticamente al alcanzar el límite
+- **Sin interrupciones**: El registro no afecta el funcionamiento normal del bot
+
+### 📊 **Comando `/stats`**
+Muestra estadísticas detalladas del archivo de chat:
+- Estado del archivo (existe/no existe)
+- Tamaño actual en MB y bytes
+- Porcentaje de uso respecto al límite de 10GB
+- Alertas cuando el archivo está cerca del límite (más del 80%)
+- Recomendaciones según el nivel de uso
+
+### 🔧 **Mensajes Largos**
+El bot maneja automáticamente mensajes largos que excedan el límite de Telegram (4096 caracteres):
+- **División automática**: Mensajes largos se dividen en fragmentos de máximo 4000 caracteres
+- **Entrega secuencial**: Los fragmentos se envían uno tras otro manteniendo el contenido completo
+- **Sin pérdida de información**: Todo el contenido se entrega al usuario
+
 ## Seguridad
 
 - Credenciales solo en `.env` (no versionado).
 - Whitelist de usuarios de Telegram.
 - Sin dependencias de skills externas no verificadas.
 - Ejecución local por defecto.
+- Archivo de chat protegido: No contiene credenciales ni información sensible
 
 ## Licencia
 
