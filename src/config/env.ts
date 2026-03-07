@@ -1,9 +1,8 @@
 import dotenv from "dotenv";
 
-// Cargar .env.example primero (plantilla), luego .env (sobrescribe)
-// Así funciona si solo existe .env.example con credenciales reales
-dotenv.config({ path: ".env.example" });
+// Cargar .env primero (valores reales), luego .env.example (plantilla) si faltan
 dotenv.config();
+dotenv.config({ path: ".env.example" });
 import { z } from "zod";
 
 const envSchema = z.object({

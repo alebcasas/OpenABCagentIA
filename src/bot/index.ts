@@ -31,6 +31,15 @@ export function getBot(): Bot {
 
 export async function startBot(): Promise<void> {
   const b = getBot();
-  await b.start({ drop_pending_updates: true });
+  try {
+    await b.start({ drop_pending_updates: true });
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('deleteWebhook') && err.message.includes('404')) {
+      console.warn("Webhook no encontrado (404), iniciando polling de todas formas...");
+      await b.start({ drop_pending_updates: true, allowed_updates: [] });
+    } else {
+      throw err;
+    }
+  }
   console.log("OpenABCagentIA bot en marcha (long polling).");
 }

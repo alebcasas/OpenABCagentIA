@@ -1,4 +1,5 @@
 import { get_current_time } from "./get_current_time.js";
+import { wikipedia_search } from "./wikipedia_search.js";
 
 export interface Tool {
   name: string;
@@ -8,6 +9,7 @@ export interface Tool {
 
 export const tools: Record<string, Tool> = {
   get_current_time,
+  wikipedia_search,
 };
 
 export function runTool(
@@ -21,9 +23,11 @@ export function runTool(
 
 export function getToolsForPrompt(): string {
   return Object.entries(tools)
-    .map(
-      ([name, t]) =>
-        `- ${name}: ${t.description} (sin argumentos)`
-    )
+    .map(([name, t]) => {
+      if (name === "wikipedia_search") {
+        return `- ${name}: ${t.description} (ejemplo: TOOL:wikipedia_search {"query": "inteligencia artificial"})`;
+      }
+      return `- ${name}: ${t.description} (ejemplo: TOOL:${name})`;
+    })
     .join("\n");
 }

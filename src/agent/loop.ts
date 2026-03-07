@@ -5,10 +5,10 @@ import { runTool, getToolsForPrompt, tools } from "../tools/index.js";
 
 const MAX_ITERATIONS = 8;
 const RECENT_MESSAGES = 20;
-const TOOL_PATTERN = /TOOL:\s*(\w+)/gi;
+const TOOL_PATTERN = /TOOL:\s*(\w+)\s*(\{.*\})/gi;
 
 const SYSTEM_PROMPT = `Eres OpenABCagentIA, un asistente útil que puede usar herramientas.
-Para usar una herramienta, escribe exactamente: TOOL:nombre_herramienta
+Para usar una herramienta, escribe exactamente: TOOL:nombre_herramienta {"param1": "valor1", "param2": "valor2"}
 Solo una herramienta por respuesta. Cuando tengas el resultado, responde al usuario con un mensaje natural.
 
 Herramientas disponibles:
@@ -16,15 +16,24 @@ ${getToolsForPrompt()}
 
 Responde siempre en el mismo idioma que el usuario. Si no necesitas ninguna herramienta, responde directamente.`;
 
-function parseToolCalls(text: string): string[] {
-  const names: string[] = [];
+function parseToolCalls(text: string): Array<{ name: string; args?: Record<string, unknown> }> {
+  const calls: Array<{ name: string; args?: Record<string, unknown> }> = [];
   let m: RegExpExecArray | null;
   TOOL_PATTERN.lastIndex = 0;
   while ((m = TOOL_PATTERN.exec(text)) !== null) {
     const name = m[1];
-    if (tools[name] && !names.includes(name)) names.push(name);
+    const argsStr = m[2];
+    let args: Record<string, unknown> | undefined;
+    if (argsStr) {
+      try {
+        args = JSON.parse(argsStr);
+      } catch (e) {
+        console.warn(`Error parsing args for ${name}: ${argsStr}`);
+      }
+    }
+    if (tools[name]) calls.push({ name, args });
   }
-  return names;
+  return calls;
 }
 
 export async function runAgentLoop(
@@ -52,15 +61,15 @@ export async function runAgentLoop(
     const content = await chat(messages);
     lastContent = content.trim();
 
-    const toolNames = parseToolCalls(content);
-    if (toolNames.length === 0) {
+    const toolCalls = parseToolCalls(content);
+    if (toolCalls.length === 0) {
       MemoryStore.add(telegramUserId, "assistant", lastContent);
       return lastContent;
     }
 
-    for (const name of toolNames) {
+    for (const { name, args } of toolCalls) {
       try {
-        const result = await runTool(name);
+        const result = await runTool(name, args);
         messages.push({
           role: "assistant",
           content,

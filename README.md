@@ -62,9 +62,10 @@ El bot usa **long polling** (no necesita servidor web ni URL pública). Solo usu
 
 ## Herramientas
 
-El agente puede usar herramientas. Por ahora está disponible:
+El agente puede usar herramientas para obtener información actualizada. Disponibles:
 
-- **get_current_time**: Devuelve la fecha y hora actual en ISO 8601.
+- **get_current_time**: Devuelve la fecha y hora actual en ISO 8601. (ejemplo: TOOL:get_current_time)
+- **wikipedia_search**: Busca información en Wikipedia y proporciona un resumen de la página más relevante. (ejemplo: TOOL:wikipedia_search {"query": "inteligencia artificial"})
 
 Para añadir más, crea un módulo en `src/tools/` y regístralo en `src/tools/index.ts`.
 
