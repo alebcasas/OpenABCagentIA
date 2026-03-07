@@ -30,6 +30,7 @@ Edita `.env` con tus valores:
 - `OPENROUTER_API_KEY` y `OPENROUTER_MODEL`: Opcionales. Si están configurados y tienes límite de tasa en Groq, se usarán como fallback.
 - `OPENAI_API_KEY`: Opcional. Tu clave API de OpenAI para usar ChatGPT/GPT-4 como fallback adicional (obtén una en https://platform.openai.com/api-keys).
 - `OPENAI_MODEL`: Opcional. Modelo a usar (por defecto `gpt-4`, también puedes usar `gpt-3.5-turbo` para menor costo).
+- `NEWSAPI_KEY`: Opcional; clave gratuita de NewsAPI para búsqueda de noticias (obtén una en https://newsapi.org/).
 
 ## Uso
 
@@ -66,6 +67,8 @@ El agente puede usar herramientas para obtener información actualizada. Disponi
 
 - **get_current_time**: Devuelve la fecha y hora actual en ISO 8601. (ejemplo: TOOL:get_current_time)
 - **wikipedia_search**: Busca información en Wikipedia y proporciona un resumen de la página más relevante. (ejemplo: TOOL:wikipedia_search {"query": "inteligencia artificial"})
+- **web_search**: Busca información general en la web usando DuckDuckGo. (ejemplo: TOOL:web_search {"query": "noticias tecnología"})
+- **news_search**: Busca noticias recientes usando NewsAPI. Requiere NEWSAPI_KEY. (ejemplo: TOOL:news_search {"query": "elecciones 2024"})
 
 Para añadir más, crea un módulo en `src/tools/` y regístralo en `src/tools/index.ts`.
 
