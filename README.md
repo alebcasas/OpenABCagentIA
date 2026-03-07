@@ -34,11 +34,23 @@ Edita `.env` con tus valores:
 
 ## Uso
 
-Modo desarrollo (reinicio automático):
+### Conversación natural (automática):
+Solo escribe mensajes naturales y el bot responderá inteligentemente, buscando en tiempo real cuando sea necesario.
 
-```bash
-npm run dev
-```
+Ejemplos:
+- "¿Qué noticias hay hoy?"
+- "¿Quién es Elon Musk?"
+- "Explícame sobre inteligencia artificial"
+
+### Comandos explícitos (búsqueda directa):
+
+| Comando | Uso | Ejemplo |
+|---------|-----|---------|
+| `/search <texto>` | Busca en la web (general) | `/search Python programming` |
+| `/news <texto>` | Busca noticias recientes | `/news inteligencia artificial 2024` |
+| `/wiki <texto>` | Busca en Wikipedia | `/wiki Albert Einstein` |
+| `/hora` | Muestra la hora actual | `/hora` |
+| `/ayuda` | Muestra todos los comandos | `/ayuda` |
 
 Modo producción:
 
