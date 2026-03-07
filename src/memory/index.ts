@@ -1,5 +1,6 @@
 import Database from "better-sqlite3";
 import { loadEnv } from "../config/env.js";
+import { chatLogger } from "./chatLogger.js";
 
 export interface ConversationRow {
   id: number;
@@ -39,6 +40,9 @@ export const MemoryStore = {
         "INSERT INTO conversations (telegram_user_id, role, content) VALUES (?, ?, ?)"
       )
       .run(telegramUserId, role, content);
+    
+    // Registrar en el archivo de chat
+    chatLogger.logChat(telegramUserId, role, content).catch(console.error);
   },
 
   getRecent(telegramUserId: number, limit: number): ConversationRow[] {
