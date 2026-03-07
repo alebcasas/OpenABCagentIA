@@ -12,6 +12,45 @@ export function getBot(): Bot {
     bot = new Bot(env.TELEGRAM_BOT_TOKEN);
     bot.use(whitelistMiddleware);
 
+    // Registrar comandos en Telegram para que se muestren automáticamente al escribir "/"
+    bot.api.setMyCommands([
+      { command: "search", description: "🔍 Busca en la web" },
+      { command: "news", description: "📰 Busca noticias" },
+      { command: "wiki", description: "📚 Busca en Wikipedia" },
+      { command: "hora", description: "⏰ Muestra la hora actual" },
+      { command: "ayuda", description: "🤖 Muestra todos los comandos" },
+    ]).catch(() => {
+      console.warn("No se pudieron registrar los comandos en Telegram");
+    });
+
+    // Middleware para detectar cuando se escribe solo "/" y mostrar el menú
+    bot.use(async (ctx, next) => {
+      const text = ctx.message?.text;
+      if (text === "/") {
+        const helpMessage = `🤖 **Comandos disponibles:**
+
+📍 **Búsqueda en tiempo real:**
+• /search <texto> - Busca en la web
+• /news <texto> - Busca noticias
+• /wiki <texto> - Busca en Wikipedia
+• /hora - Muestra la hora actual
+
+💬 **Conversación natural:**
+Solo escribe tu pregunta y el bot responderá automáticamente
+
+**Ejemplos:**
+/search Python
+/news inteligencia artificial
+/wiki Elon Musk
+/hora
+
+¡Puedes utilizar comandos o simplemente escribir preguntas normales!`;
+        await ctx.reply(helpMessage);
+        return; // No continuar con otros handlers
+      }
+      await next();
+    });
+
     // Comando para búsqueda web general
     bot.command("search", async (ctx) => {
       const args = ctx.message?.text?.replace("/search", "").trim();
