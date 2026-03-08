@@ -1,127 +1,148 @@
 # OpenABCagentIA
 
-Agente de IA personal que corre en local y usa Telegram como interfaz. Usa **Groq** (Llama 3.3 70B) como LLM principal, con fallbacks opcionales en **OpenRouter** y **OpenAI/ChatGPT**. Memoria persistente con SQLite y registro de conversaciones en archivo con límite de 10GB.
+Agente de IA personal que corre en local y usa **Telegram** como interfaz. Integra **Groq** como LLM principal, fallbacks opcionales de OpenRouter/OpenAI, memoria en **SQLite**, registro de conversaciones en archivo, herramientas de búsqueda y clima en tiempo real.
 
-## Requisitos
+---
+
+## Guía Paso a Paso
+
+### Paso 1) Requisitos previos
+
+Necesitas:
 
 - Node.js 18+
-- Cuenta de Telegram y token de bot
-- API key de [Groq](https://console.groq.com/) (recomendado para mejor rendimiento y velocidad)
-- (Opcional) API key de [OpenRouter](https://openrouter.ai/) — como fallback cuando Groq tiene límites de tasa
-- (Opcional) API key de [OpenAI](https://platform.openai.com/) — para usar ChatGPT/GPT-4 como fallback adicional
+- Un bot de Telegram (token de @BotFather)
+- Tu user ID de Telegram (para whitelist)
+- API key de Groq
+- (Opcional) OpenRouter / OpenAI
+- (Recomendado para `/clima`) API key de WeatherAPI
 
-## Instalación
+---
+
+### Paso 2) Instalar dependencias
 
 ```bash
 npm install
 ```
 
-Copia el archivo de ejemplo y rellena las variables:
+---
+
+### Paso 3) Configurar variables de entorno
+
+Copia el archivo de ejemplo:
 
 ```bash
 cp .env.example .env
 ```
 
-Edita `.env` con tus valores:
+Edita `.env` y completa al menos:
 
-- `TELEGRAM_BOT_TOKEN`: Token del bot de Telegram (obtén uno en [@BotFather](https://t.me/botfather)).
-- `TELEGRAM_ALLOWED_USER_IDS`: Tu ID de usuario de Telegram (o varios separados por comas).
-- `GROQ_API_KEY`: Tu clave API de Groq (https://console.groq.com/keys).
-- `OPENROUTER_API_KEY` y `OPENROUTER_MODEL`: Opcionales. Si están configurados y tienes límite de tasa en Groq, se usarán como fallback.
-- `OPENAI_API_KEY`: Opcional. Tu clave API de OpenAI para usar ChatGPT/GPT-4 como fallback adicional (obtén una en https://platform.openai.com/api-keys).
-- `OPENAI_MODEL`: Opcional. Modelo a usar (por defecto `gpt-4`, también puedes usar `gpt-3.5-turbo` para menor costo).
-- `NEWSAPI_KEY`: Opcional; clave gratuita de NewsAPI para búsqueda de noticias (obtén una en https://newsapi.org/).
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_ALLOWED_USER_IDS`
+- `GROQ_API_KEY`
 
-## Uso
+Variables disponibles:
 
-### Conversación natural (automática):
-Solo escribe mensajes naturales y el bot responderá inteligentemente, buscando en tiempo real cuando sea necesario.
+- `OPENROUTER_API_KEY` (opcional)
+- `OPENROUTER_MODEL` (opcional)
+- `OPENAI_API_KEY` (opcional)
+- `OPENAI_MODEL` (opcional)
+- `NEWSAPI_KEY` (opcional)
+- `WEATHERAPI_KEY` (opcional pero recomendado para `/clima`)
+- `DB_PATH` (opcional)
 
-Ejemplos:
-- "¿Qué noticias hay hoy?"
-- "¿Quién es Elon Musk?"
-- "Explícame sobre inteligencia artificial"
+---
 
-### Comandos explícitos (búsqueda directa):
+### Paso 4) Ejecutar en desarrollo
 
-| Comando | Uso | Ejemplo |
-|---------|-----|---------|
-| `/search <texto>` | Busca en la web (general) | `/search Python programming` |
-| `/news <texto>` | Busca noticias recientes | `/news inteligencia artificial 2024` |
-| `/wiki <texto>` | Busca en Wikipedia | `/wiki Albert Einstein` |
-| `/hora` | Muestra la hora actual | `/hora` |
-| `/stats` | Muestra estadísticas del archivo de chat | `/stats` |
-| `/ayuda` | Muestra todos los comandos | `/ayuda` |
+```bash
+npm run dev
+```
 
-Modo producción:
+> ⚠️ Importante: deja **una sola instancia** del bot corriendo. Si abres varias, Telegram devuelve error **409 Conflict**.
+
+---
+
+### Paso 5) Probar comandos en Telegram
+
+Comandos disponibles:
+
+| Comando | Qué hace | Ejemplo |
+|---|---|---|
+| `/search <texto>` | Búsqueda web general | `/search inteligencia artificial` |
+| `/news <texto>` | Noticias recientes | `/news economia argentina` |
+| `/wiki <texto>` | Resumen de Wikipedia | `/wiki Alan Turing` |
+| `/fecha_y_hora` | Devuelve fecha/hora formateada | `/fecha_y_hora` |
+| `/clima <ubicación>` | Clima actual por ubicación | `/clima Córdoba, Argentina` |
+| `/stats` | Estadísticas del `chat_log.txt` | `/stats` |
+| `/ayuda` | Muestra ayuda y ejemplos | `/ayuda` |
+
+Compatibilidad:
+
+- `/hora` se mantiene como alias legado de `/fecha_y_hora`.
+
+Formato actual de fecha/hora:
+
+- `Domingo, 8 De Marzo De 2026, 02:52HS AM`
+
+---
+
+### Paso 6) Entender el comando `/clima`
+
+`/clima` usa **WeatherAPI** como proveedor principal.
+
+Mejoras actuales implementadas:
+
+1. Reintentos automáticos ante errores 5xx (como 504).
+2. Timeout de red para evitar bloqueos.
+3. Fallback automático a **wttr.in** si WeatherAPI falla temporalmente.
+
+Si ves errores de autenticación o disponibilidad:
+
+- `401`: API key inválida o deshabilitada.
+- `504`: timeout del proveedor (debería activar fallback automático).
+
+---
+
+### Paso 7) Ver estadísticas del log de chat
+
+Con `/stats` verás:
+
+- Tamaño del archivo en MB con decimales (ej. `0.16 MB`)
+- Tamaño en bytes
+- Porcentaje de uso frente al límite de 10GB
+
+El archivo se limpia automáticamente al alcanzar el límite.
+
+---
+
+### Paso 8) Ejecutar en producción
 
 ```bash
 npm run build
 npm start
 ```
 
-El bot usa **long polling** (no necesita servidor web ni URL pública). Solo usuarios en `TELEGRAM_ALLOWED_USER_IDS` pueden usarlo.
+---
 
-## Estructura
+## Estructura del proyecto
 
-- `src/config/` — Variables de entorno y validación (Zod).
-- `src/bot/` — Bot de Telegram (Grammy), whitelist, long polling.
-- `src/agent/` — Bucle del agente y tipos.
-- `src/llm/` — Integraciones de LLM:
-  - **Groq** (principal) — Más rápido y económico, usa Llama 3.3 70B.
-  - **OpenRouter** (fallback) — Alternativa a Groq cuando hay límites de tasa.
-  - **OpenAI** (fallback) — ChatGPT/GPT-4 para máxima calidad cuando sea necesario.
-- `src/memory/` — Memoria persistente con SQLite (better-sqlite3) y registro de conversaciones en archivo.
-  - **chatLogger.ts** — Sistema de registro de chats con límite de 10GB y auto-limpieza.
-  - **stats.ts** — Funciones para mostrar estadísticas del archivo de chat.
-- `src/tools/` — Herramientas (p. ej. `get_current_time`).
+- `src/config/` → validación de entorno
+- `src/bot/` → integración Telegram
+- `src/agent/` → loop del agente
+- `src/llm/` → Groq/OpenRouter/OpenAI
+- `src/memory/` → SQLite + logger + stats
+- `src/tools/` → herramientas (`search`, `news`, `wiki`, `fecha/hora`, `clima`)
 
-## Herramientas
-
-El agente puede usar herramientas para obtener información actualizada. Disponibles:
-
-- **get_current_time**: Devuelve la fecha y hora actual en ISO 8601. (ejemplo: TOOL:get_current_time)
-- **wikipedia_search**: Busca información en Wikipedia y proporciona un resumen de la página más relevante. (ejemplo: TOOL:wikipedia_search {"query": "inteligencia artificial"})
-- **web_search**: Busca información general en la web usando DuckDuckGo. (ejemplo: TOOL:web_search {"query": "noticias tecnología"})
-- **news_search**: Busca noticias recientes usando NewsAPI. Requiere NEWSAPI_KEY. (ejemplo: TOOL:news_search {"query": "elecciones 2024"})
-
-Para añadir más, crea un módulo en `src/tools/` y regístralo en `src/tools/index.ts`.
-
-## Sistema de Registro de Chats
-
-El bot incluye un sistema avanzado de registro de conversaciones:
-
-### 📁 **Registro Automático**
-- **Archivo de chat**: `chat_log.txt` en la raíz del proyecto
-- **Formato estructurado**: Timestamp, ID de usuario, rol y contenido
-- **Registro en tiempo real**: Cada mensaje del usuario y respuesta del bot se guarda automáticamente
-
-### 🎯 **Límite y Auto-limpieza**
-- **Tamaño máximo**: 10GB (10,737,418,240 bytes)
-- **Auto-limpieza**: El archivo se vacía automáticamente al alcanzar el límite
-- **Sin interrupciones**: El registro no afecta el funcionamiento normal del bot
-
-### 📊 **Comando `/stats`**
-Muestra estadísticas detalladas del archivo de chat:
-- Estado del archivo (existe/no existe)
-- Tamaño actual en MB y bytes
-- Porcentaje de uso respecto al límite de 10GB
-- Alertas cuando el archivo está cerca del límite (más del 80%)
-- Recomendaciones según el nivel de uso
-
-### 🔧 **Mensajes Largos**
-El bot maneja automáticamente mensajes largos que excedan el límite de Telegram (4096 caracteres):
-- **División automática**: Mensajes largos se dividen en fragmentos de máximo 4000 caracteres
-- **Entrega secuencial**: Los fragmentos se envían uno tras otro manteniendo el contenido completo
-- **Sin pérdida de información**: Todo el contenido se entrega al usuario
+---
 
 ## Seguridad
 
-- Credenciales solo en `.env` (no versionado).
-- Whitelist de usuarios de Telegram.
-- Sin dependencias de skills externas no verificadas.
-- Ejecución local por defecto.
-- Archivo de chat protegido: No contiene credenciales ni información sensible
+- No subas `.env` al repositorio.
+- Usa whitelist con `TELEGRAM_ALLOWED_USER_IDS`.
+- Evita ejecutar múltiples instancias del bot con el mismo token.
+
+---
 
 ## Licencia
 

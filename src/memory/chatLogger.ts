@@ -59,7 +59,7 @@ export class ChatLogger {
       const stats = await fs.stat(this.logFile);
       return {
         size: stats.size,
-        sizeMB: Math.round(stats.size / (1024 * 1024)),
+        sizeMB: stats.size / (1024 * 1024),
         exists: true
       };
     } catch {

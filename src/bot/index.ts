@@ -19,7 +19,8 @@ export function getBot(): Bot {
       { command: "search", description: "🔍 Busca en la web" },
       { command: "news", description: "📰 Busca noticias" },
       { command: "wiki", description: "📚 Busca en Wikipedia" },
-      { command: "hora", description: "⏰ Muestra la hora actual" },
+      { command: "fecha_y_hora", description: "⏰ Muestra la Fecha y Hora Actual" },
+      { command: "clima", description: "🌤️ Muestra el clima de una ubicación" },
       { command: "ayuda", description: "🤖 Muestra todos los comandos" },
     ]).catch(() => {
       console.warn("No se pudieron registrar los comandos en Telegram");
@@ -35,7 +36,11 @@ export function getBot(): Bot {
 • /search <texto> - Busca en la web
 • /news <texto> - Busca noticias
 • /wiki <texto> - Busca en Wikipedia
-• /hora - Muestra la hora actual
+• /fecha_y_hora - Muestra la Fecha y Hora Actual
+• /clima <ubicación> - Muestra el clima actual
+
+📊 **Estadísticas:**
+• /stats - Muestra estadísticas del archivo de chat
 
 💬 **Conversación natural:**
 Solo escribe tu pregunta y el bot responderá automáticamente
@@ -44,7 +49,9 @@ Solo escribe tu pregunta y el bot responderá automáticamente
 /search Python
 /news inteligencia artificial
 /wiki Elon Musk
-/hora
+/fecha_y_hora
+/clima Córdoba, Argentina
+/stats
 
 ¡Puedes utilizar comandos o simplemente escribir preguntas normales!`;
         await ctx.reply(helpMessage);
@@ -104,11 +111,39 @@ Solo escribe tu pregunta y el bot responderá automáticamente
       }
     });
 
-    // Comando para hora actual
+    // Comando para Fecha y Hora actual
+    bot.command("fecha_y_hora", async (ctx) => {
+      try {
+        const result = await runTool("get_current_time");
+        await ctx.reply(`⏰ ${result}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error desconocido";
+        await ctx.reply(`❌ Error: ${msg}`);
+      }
+    });
+
+    // Alias legado para mantener compatibilidad con /hora
     bot.command("hora", async (ctx) => {
       try {
         const result = await runTool("get_current_time");
         await ctx.reply(`⏰ ${result}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error desconocido";
+        await ctx.reply(`❌ Error: ${msg}`);
+      }
+    });
+
+    // Comando para clima
+    bot.command("clima", async (ctx) => {
+      const args = ctx.message?.text?.replace("/clima", "").trim();
+      if (!args) {
+        await ctx.reply("❌ Uso: /clima <ubicación>\nEjemplo: /clima Córdoba, Argentina");
+        return;
+      }
+      try {
+        await ctx.reply("🌤️ Buscando clima...");
+        const result = await runTool("weather_search", { location: args });
+        await ctx.reply(result);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Error desconocido";
         await ctx.reply(`❌ Error: ${msg}`);
@@ -124,7 +159,8 @@ Solo escribe tu pregunta y el bot responderá automáticamente
 • /search <texto> - Busca en la web
 • /news <texto> - Busca noticias
 • /wiki <texto> - Busca en Wikipedia
-• /hora - Muestra la hora actual
+• /fecha_y_hora - Muestra la Fecha y Hora Actual
+• /clima <ubicación> - Muestra el clima actual
 
 📊 **Estadísticas:**
 • /stats - Muestra estadísticas del archivo de chat
@@ -136,7 +172,8 @@ Solo escribe tu pregunta y el bot responderá automáticamente
 /search Python
 /news inteligencia artificial
 /wiki Elon Musk
-/hora
+/fecha_y_hora
+/clima Córdoba, Argentina
 /stats
 
 ¡Puedes utilizar comandos o simplemente escribir preguntas normales!`;
@@ -147,10 +184,11 @@ Solo escribe tu pregunta y el bot responderá automáticamente
     bot.command("stats", async (ctx) => {
       try {
         const stats = await chatLogger.getLogFileStats();
+        const sizeMBFormatted = stats.sizeMB.toFixed(2);
         
         let response = `📊 **Estadísticas del Archivo de Chat**\n\n`;
         response += `📁 **Archivo:** ${stats.exists ? "Existe" : "No existe"}\n`;
-        response += `📏 **Tamaño:** ${stats.sizeMB} MB (${stats.size} bytes)\n`;
+        response += `📏 **Tamaño:** ${sizeMBFormatted} MB (${stats.size} bytes)\n`;
         response += `⚠️ **Límite:** 10240 MB (10GB)\n`;
         
         if (stats.exists) {
@@ -166,7 +204,15 @@ Solo escribe tu pregunta y el bot responderá automáticamente
           }
         }
         
-        await ctx.reply(response);
+        // Dividir el mensaje si es demasiado largo para Telegram (límite: 4096 caracteres)
+        if (response.length > 4000) {
+          const chunks = response.match(/.{1,4000}/g) || [];
+          for (const chunk of chunks) {
+            await ctx.reply(chunk);
+          }
+        } else {
+          await ctx.reply(response);
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Error desconocido";
         await ctx.reply(`❌ Error al obtener estadísticas: ${msg}`);
@@ -185,7 +231,16 @@ Solo escribe tu pregunta y el bot responderá automáticamente
       try {
         await ctx.reply("Pensando...");
         const response = await runAgentLoop(userId, text);
-        await ctx.reply(response);
+        
+        // Dividir el mensaje si es demasiado largo para Telegram (límite: 4096 caracteres)
+        if (response.length > 4000) {
+          const chunks = response.match(/.{1,4000}/g) || [];
+          for (const chunk of chunks) {
+            await ctx.reply(chunk);
+          }
+        } else {
+          await ctx.reply(response);
+        }
         
         // Registrar la respuesta del bot en el archivo de chat
         await chatLogger.logChat(userId, "assistant", response);

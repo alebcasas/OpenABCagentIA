@@ -2,10 +2,11 @@ import { chatLogger } from "./chatLogger.js";
 
 export async function showChatStats(): Promise<void> {
   const stats = await chatLogger.getLogFileStats();
+  const sizeMBFormatted = stats.sizeMB.toFixed(2);
   
   console.log("\n=== ESTADÍSTICAS DEL ARCHIVO DE CHAT ===");
   console.log(`Archivo: ${stats.exists ? "Existe" : "No existe"}`);
-  console.log(`Tamaño: ${stats.sizeMB} MB (${stats.size} bytes)`);
+  console.log(`Tamaño: ${sizeMBFormatted} MB (${stats.size} bytes)`);
   console.log(`Límite: 10240 MB (10GB)`);
   
   if (stats.exists) {

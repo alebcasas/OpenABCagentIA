@@ -22,6 +22,7 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional().default(""),
   OPENAI_MODEL: z.string().optional().default("gpt-4"),
   NEWSAPI_KEY: z.string().optional().default(""),
+  WEATHERAPI_KEY: z.string().optional().default(""),
   DB_PATH: z.string().optional().default("./memory.db"),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 });
