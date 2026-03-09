@@ -22,6 +22,7 @@ export function getBot(): Bot {
       { command: "fecha_y_hora", description: "⏰ Muestra la Fecha y Hora Actual" },
       { command: "clima", description: "🌤️ Muestra el clima de una ubicación" },
       { command: "ayuda", description: "🤖 Muestra todos los comandos" },
+      { command: "info", description: "ℹ️ Muestra información del proyecto" },
     ]).catch(() => {
       console.warn("No se pudieron registrar los comandos en Telegram");
     });
@@ -36,8 +37,11 @@ export function getBot(): Bot {
 • /search <texto> - Busca en la web
 • /news <texto> - Busca noticias
 • /wiki <texto> - Busca en Wikipedia
-• /fecha_y_hora - Muestra la Fecha y Hora Actual
+• /fecha_y_hora - Muestra la fecha y hora actual
 • /clima <ubicación> - Muestra el clima actual
+
+ℹ️ **Información del proyecto:**
+• /info - Muestra información sobre OpenABCagentIA
 
 📊 **Estadísticas:**
 • /stats - Muestra estadísticas del archivo de chat
@@ -51,9 +55,10 @@ Solo escribe tu pregunta y el bot responderá automáticamente
 /wiki Elon Musk
 /fecha_y_hora
 /clima Córdoba, Argentina
+/info
 /stats
 
-¡Puedes utilizar comandos o simplemente escribir preguntas normales!`;
+¡Puedes usar comandos o simplemente escribir preguntas normales!`;
         await ctx.reply(helpMessage);
         return; // No continuar con otros handlers
       }
@@ -159,8 +164,11 @@ Solo escribe tu pregunta y el bot responderá automáticamente
 • /search <texto> - Busca en la web
 • /news <texto> - Busca noticias
 • /wiki <texto> - Busca en Wikipedia
-• /fecha_y_hora - Muestra la Fecha y Hora Actual
+• /fecha_y_hora - Muestra la fecha y hora actual
 • /clima <ubicación> - Muestra el clima actual
+
+ℹ️ **Información del proyecto:**
+• /info - Muestra información sobre OpenABCagentIA
 
 📊 **Estadísticas:**
 • /stats - Muestra estadísticas del archivo de chat
@@ -174,10 +182,22 @@ Solo escribe tu pregunta y el bot responderá automáticamente
 /wiki Elon Musk
 /fecha_y_hora
 /clima Córdoba, Argentina
+/info
 /stats
 
-¡Puedes utilizar comandos o simplemente escribir preguntas normales!`;
+¡Puedes usar comandos o simplemente escribir preguntas normales!`;
       await ctx.reply(helpMessage);
+    });
+
+    // Comando de información del proyecto
+    bot.command("info", async (ctx) => {
+      const infoMessage = `ℹ️ **Información del proyecto**
+
+Creado por: Alejandro B. Casas
+Desarrollador de aplicaciones webs en Python y Django
+Repositorio del proyecto en GitHub: https://github.com/alebcasas/OpenABCagentIA
+OpenABCagentIA es un Agente de IA personal que corre en local y usa Telegram como interfaz. Integra Groq como LLM principal, fallbacks opcionales de OpenRouter/OpenAI, memoria en SQLite, registro de conversaciones en archivo, herramientas de búsqueda y clima en tiempo real.`;
+      await ctx.reply(infoMessage);
     });
 
     // Comando para estadísticas del archivo de chat

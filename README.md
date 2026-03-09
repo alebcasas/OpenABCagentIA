@@ -76,6 +76,7 @@ Comandos disponibles:
 | `/clima <ubicación>` | Clima actual por ubicación | `/clima Córdoba, Argentina` |
 | `/stats` | Estadísticas del `chat_log.txt` | `/stats` |
 | `/ayuda` | Muestra ayuda y ejemplos | `/ayuda` |
+| `/info` | Muestra información del proyecto | `/info` |
 
 Compatibilidad:
 
